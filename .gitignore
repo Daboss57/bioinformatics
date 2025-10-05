@@ -1,0 +1,28 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.python-version
+.env
+.venv
+venv/
+
+# Node
+node_modules/
+*.tsbuildinfo
+
+# Nextflow
+.work/
+.nextflow*
+results/
+
+# VS Code
+.vscode/
+.ipynb_checkpoints/
