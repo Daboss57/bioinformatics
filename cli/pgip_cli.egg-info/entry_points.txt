@@ -1,0 +1,2 @@
+[console_scripts]
+pgip = pgip_cli.app:app

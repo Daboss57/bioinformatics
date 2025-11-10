@@ -1,0 +1,37 @@
+{
+  "name": "graph-pathway-linker",
+  "version": "0.4.2",
+  "description": "Maps variant hits onto graph-based pathway representations for interpretation.",
+  "authors": ["PGIP Graph Team"],
+  "entrypoint": "pgip-plugins graph-pathway-linker --graph data/graphs/example.gfa --vcf data/variants/example.vcf",
+  "created_at": "2024-07-07T09:45:00Z",
+  "updated_at": "2025-01-05T11:05:00Z",
+  "inputs": [
+    {
+      "name": "pangenome_graph",
+      "description": "GFA representation of the pangenome graph",
+      "media_type": "application/vnd.pgip.gfa"
+    },
+    {
+      "name": "variant_subset",
+      "description": "Subset of variants to map",
+      "media_type": "application/vnd.pgip.graph-selection+json"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "pathway_annotations",
+      "description": "Graph annotated pathway hits",
+      "media_type": "application/json"
+    }
+  ],
+  "tags": ["graph", "pathways", "visualization"],
+  "provenance": {
+    "container_image": "ghcr.io/pgip/graph-pathway-linker:0.4.2",
+    "repository_url": "https://github.com/pgip-dev/graph-pathway-linker"
+  },
+  "resources": {
+    "cpu": "6",
+    "memory": "12Gi"
+  }
+}

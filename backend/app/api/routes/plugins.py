@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
-from app.models.plugin import PluginManifest, PluginSummary
+from app.models.plugin import PluginManifest, PluginStats, PluginSummary
 from app.repositories import plugins as plugin_repo
 
 router = APIRouter(prefix="/plugins", tags=["plugins"])
@@ -27,6 +27,15 @@ async def list_plugins(
         )
         for record in records
     ]
+
+
+@router.get("/stats", response_model=PluginStats)
+async def get_plugin_stats(
+    session: AsyncSession = Depends(get_session),
+) -> PluginStats:
+    """Return aggregate statistics for the plugin registry."""
+
+    return await plugin_repo.get_plugin_stats(session)
 
 
 @router.get("/{plugin_name}", response_model=PluginManifest)

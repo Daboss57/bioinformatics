@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Iterator
 from pathlib import Path
 from typing import AsyncGenerator
@@ -27,6 +28,8 @@ def client(tmp_path: Path) -> Iterator[TestClient]:
 
     database_path = tmp_path / "test_pgip.db"
     database_url = f"sqlite+aiosqlite:///{database_path.as_posix()}"
+
+    os.environ["PGIP_SEED_DEMO_DATA"] = "0"
 
     init_engine(database_url, echo=False)
 

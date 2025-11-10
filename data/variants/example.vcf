@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=ANN,Number=.,Type=String,Description="Functional annotations">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	879317	.	C	T	58.21	PASS	AF=0.12;ANN=T|missense_variant|MODERATE|GENE1|GENE1|transcript|ENST00001|protein_coding|1/5|c.34C>T|p.Pro12Leu|120/500|34/150|12/50|0.72
+chr3	1267332	rs555	G	A	42.77	PASS	AF=0.03;ANN=A|synonymous_variant|LOW|GENE2|GENE2|transcript|ENST00002|protein_coding|2/7|c.210G>A|p.Gly70=|210/1680|210/1680|70/560|0.15
+chr7	55086721	rs80234	T	C	91.00	PASS	AF=0.41;ANN=C|intron_variant|MODIFIER|GENE3|GENE3|transcript|ENST00003|protein_coding|3/12|c.102+5T>C|||||

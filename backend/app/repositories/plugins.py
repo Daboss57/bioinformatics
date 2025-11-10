@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Optional
+import json
+import logging
+from collections import Counter
+from pathlib import Path
+from typing import Optional
 
 from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Plugin
-from app.models.plugin import PluginManifest
+from app.models.plugin import PluginManifest, PluginStats, PluginTagSummary
+
+LOGGER = logging.getLogger(__name__)
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PLUGIN_DATA_DIR = PROJECT_ROOT / "data" / "plugins"
 
 
 async def list_plugins(session: AsyncSession) -> list[Plugin]:
@@ -80,3 +88,69 @@ async def delete_plugin(session: AsyncSession, *, name: str, version: str) -> bo
     await session.delete(plugin)
     await session.commit()
     return True
+
+
+async def get_plugin_stats(session: AsyncSession) -> PluginStats:
+    """Aggregate registry statistics for dashboard consumption."""
+
+    records = await list_plugins(session)
+    if not records:
+        return PluginStats(total_plugins=0, unique_authors=0, unique_tags=0)
+
+    tag_counter: Counter[str] = Counter()
+    authors: set[str] = set()
+    most_recent = None
+
+    for record in records:
+        tag_counter.update(record.tags or [])
+        authors.update(record.authors or [])
+        if most_recent is None or (record.updated_at and record.updated_at > most_recent):
+            most_recent = record.updated_at
+
+    top_tags = [
+        PluginTagSummary(tag=tag, usage_count=count)
+        for tag, count in tag_counter.most_common(5)
+    ]
+
+    return PluginStats(
+        total_plugins=len(records),
+        unique_authors=len(authors),
+        unique_tags=len(tag_counter),
+        most_recent_update=most_recent,
+        top_tags=top_tags,
+    )
+
+
+async def seed_demo_plugins(session: AsyncSession) -> int:
+    """Populate the registry with demo plugins if none exist."""
+
+    existing = await list_plugins(session)
+    if existing:
+        return 0
+
+    inserted = 0
+    manifests = _load_manifests_from_disk()
+    for manifest in manifests:
+        await upsert_plugin(session, manifest)
+        inserted += 1
+    return inserted
+
+
+def _load_manifests_from_disk() -> list[PluginManifest]:
+    """Read plugin manifests from the data/plugins directory."""
+
+    if not PLUGIN_DATA_DIR.exists():
+        LOGGER.warning("Plugin data directory %s not found", PLUGIN_DATA_DIR)
+        return []
+
+    manifests: list[PluginManifest] = []
+    for manifest_path in sorted(PLUGIN_DATA_DIR.glob("*.json")):
+        try:
+            payload = json.loads(manifest_path.read_text())
+            manifest = PluginManifest.model_validate(payload)
+        except Exception as exc:  # pragma: no cover - defensive guard
+            LOGGER.error("Failed to load plugin manifest %s: %s", manifest_path, exc)
+            continue
+        manifests.append(manifest)
+
+    return manifests

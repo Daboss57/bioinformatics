@@ -1,3 +1,15 @@
+Metadata-Version: 2.4
+Name: pgip-cli
+Version: 0.1.0
+Summary: Command-line interface for the PanGenome Insight Platform
+Author: PGIP Team
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: typer[all]>=0.12.4
+Requires-Dist: httpx>=0.27.2
+Requires-Dist: rich>=13.7.1
+Requires-Dist: pydantic>=2.9.2
+
 # PGIP CLI
 
 Typer-based command-line interface for interacting with the PGIP backend. The initial commands cover plugin registry management and wrap the bundled Nextflow ingest pipeline; future iterations will add richer workflow orchestration and cohort operations.

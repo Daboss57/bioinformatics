@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+pgip_cli/__init__.py
+pgip_cli/app.py
+pgip_cli.egg-info/PKG-INFO
+pgip_cli.egg-info/SOURCES.txt
+pgip_cli.egg-info/dependency_links.txt
+pgip_cli.egg-info/entry_points.txt
+pgip_cli.egg-info/requires.txt
+pgip_cli.egg-info/top_level.txt

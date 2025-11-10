@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     openapi_url: str = "/openapi.json"
     database_url: str = "sqlite+aiosqlite:///./pgip.db"
     database_echo: bool = False
+    seed_demo_data: bool = True
 
     model_config = SettingsConfigDict(env_prefix="PGIP_", env_file=".env", env_file_encoding="utf-8")
 

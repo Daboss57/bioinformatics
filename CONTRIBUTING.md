@@ -45,4 +45,4 @@ Thanks for your interest in strengthening PGIP! We welcome students, researchers
 
 By participating, you agree to uphold the [Code of Conduct](CODE_OF_CONDUCT.md). Decisions about architecture and roadmap are documented in ADRs (to be added) and discussed openly via GitHub issues or community calls.
 
-If you have questions, open an issue or email pgip-maintainers@proton.me. We look forward to building PGIP together!
+If you have questions, open an issue or email noelbobby01@gmail.com. We look forward to building PGIP together!

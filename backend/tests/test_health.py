@@ -76,3 +76,24 @@ def test_plugin_lifecycle(client: TestClient) -> None:
 def test_delete_missing_plugin_returns_404(client: TestClient) -> None:
     response = client.delete("/api/v1/plugins/unknown", params={"version": "0.0.1"})
     assert response.status_code == 404
+
+
+def test_plugin_stats_endpoint(client: TestClient) -> None:
+    manifest_payload = _sample_manifest()
+    manifest_payload["tags"].extend(["frequency", "population"])
+    manifest_payload["authors"].append("Guest Scientist")
+
+    create_response = client.post("/api/v1/plugins/", json=manifest_payload)
+    assert create_response.status_code == 201
+
+    stats_response = client.get("/api/v1/plugins/stats")
+    assert stats_response.status_code == 200
+    stats = stats_response.json()
+
+    assert stats["total_plugins"] == 1
+    assert stats["unique_authors"] == 2
+    assert stats["unique_tags"] >= 2
+    assert stats["most_recent_update"] is not None
+    assert stats["top_tags"]
+    top_tag_names = {tag["tag"] for tag in stats["top_tags"]}
+    assert "frequency" in top_tag_names

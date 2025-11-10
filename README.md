@@ -22,7 +22,7 @@ flowchart LR
     subgraph backend[Backend Services]
         fastapi[FastAPI Core API]
         plugins[Annotation Plugin Runtime]
-        rust["Graph Ops (Rust)"]
+        rust[Graph Ops (Rust)]
         db[(PostgreSQL)]
         es[(Elasticsearch)]
     end
@@ -77,6 +77,62 @@ A more detailed timeline lives in `docs/roadmap.md` (created later in the schedu
     ```
 
 5. Open http://127.0.0.1:8000/docs to explore the interactive OpenAPI documentation.
+
+> The backend seeds two demo plugins on startup so the dashboard and registry pages have data immediately. Set `PGIP_SEED_DEMO_DATA=0` to disable this behaviour.
+
+## Frontend Explorer
+
+The React/Vite frontend surfaces the plugin registry, dashboard insights, and a manifest registration form.
+
+```powershell
+cd frontend
+npm install
+npm run dev -- --host
+```
+
+Visit http://127.0.0.1:5173 to explore the UI:
+
+- **Dashboard** – live counts, recent activity, and tag usage sourced from `/api/v1/plugins/stats`.
+- **Plugins** – searchable, tag-filterable registry view.
+- **Register** – JSON editor to post plugin manifests directly to the backend.
+
+The production bundle can be created with `npm run build` (already wired into CI).
+
+## CLI Quick Reference
+
+The Typer-based CLI lives under `cli/` and now exposes both registry listing, aggregate stats, and workflow helpers:
+
+```powershell
+cd cli
+python -m pgip_cli.app plugins list
+python -m pgip_cli.app plugins stats
+python -m pgip_cli.app pipelines list
+python -m pgip_cli.app pipelines run
+```
+
+Pass `--api-url` to target a non-default backend URL. Use `--nextflow-bin` if the Nextflow executable is not on your `PATH`.
+
+## Sample Pipeline Run
+
+1. Install [Nextflow](https://www.nextflow.io/) (requires Java 11+). On Windows we recommend running inside WSL2 for the smoothest experience.
+2. Start the backend using the steps above so the ingestion API is available at `http://127.0.0.1:8000`.
+3. Execute the bundled ingest workflow from the repository root:
+
+    ```powershell
+    cd cli
+    python -m pgip_cli.app pipelines run --backend-api http://127.0.0.1:8000
+    ```
+
+    The command wraps `nextflow run workflows/nextflow/ingest_pangenome.nf` and streams logs in real time.
+
+4. Inspect results under `results/ingest/` and verify the new entry via:
+
+    ```powershell
+    python -m pgip_cli.app pipelines list
+    Invoke-RestMethod -Method Get -Uri http://127.0.0.1:8000/api/v1/assets/vcf | ConvertTo-Json -Depth 4
+    ```
+
+    The endpoint returns the most recent ingest summaries recorded in the database.
 
 ## Contributing
 

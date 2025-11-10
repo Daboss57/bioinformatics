@@ -72,6 +72,14 @@ const PluginDetailPage = () => {
 
       <article className="detail-card">
         <p>{manifest.description}</p>
+        <div className="meta-row">
+          <span>
+            Created: <strong>{new Date(manifest.created_at).toLocaleString()}</strong>
+          </span>
+          <span>
+            Updated: <strong>{new Date(manifest.updated_at).toLocaleString()}</strong>
+          </span>
+        </div>
         {sortedTags.length ? (
           <ul className="tag-list">
             {sortedTags.map((tag) => (

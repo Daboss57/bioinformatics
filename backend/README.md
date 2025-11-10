@@ -6,6 +6,7 @@ This directory contains the FastAPI service responsible for orchestrating workfl
 
 - `/health` heartbeat endpoint for service monitoring
 - `/api/v1/plugins/` CRUD endpoints backed by a relational database
+- `/api/v1/assets/vcf` ingress endpoint to capture dataset summaries emitted by pipelines
 - CORS configuration for future frontend integration
 - Pydantic-based settings management via environment variables
 - SQLAlchemy models and Alembic configuration for schema management

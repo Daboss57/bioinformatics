@@ -10,58 +10,64 @@
 
 nextflow.enable.dsl=2
 
-params.vcf = params.vcf ?: "data/example.vcf.gz"
-params.gfa = params.gfa ?: "data/example.gfa"
-params.reference = params.reference ?: "data/reference.fa"
-params.backend_api = params.backend_api ?: "http://localhost:8000"
+params.vcf = params.vcf ?: "data/variants/example.vcf"
+params.gfa = params.gfa ?: "data/graphs/example.gfa"
+params.backend_api = params.backend_api ?: "http://127.0.0.1:8000"
 params.publish_dir = params.publish_dir ?: "results/ingest"
 
-process NORMALIZE_VCF {
+process PREPARE_VCF {
     tag "vcf:${params.vcf}"
-    publishDir params.publish_dir, mode: "copy", overwrite: true
-    container "quay.io/biocontainers/bcftools:1.20--h8b25389_0"
+    publishDir params.publish_dir, mode: "copy", overwrite: true, pattern: "normalized.*"
 
     input:
-    tuple path(vcf_file), path(reference)
+    path vcf_file
 
     output:
-    tuple path("normalized.vcf.gz"), path("normalized.vcf.gz.tbi"), path("normalized.vcf.stats")
+    tuple path("normalized.vcf"), path("normalized.vcf.summary.json")
 
     script:
     """
-    bcftools norm -m-any --check-ref w -f ${reference} ${vcf_file} -Oz -o normalized.vcf.gz
-    tabix -p vcf normalized.vcf.gz
-    bcftools stats -s - normalized.vcf.gz > normalized.vcf.stats
-    """
-}
+    python - <<'PY'
+    import json
+    import pathlib
+    import shutil
+    from datetime import datetime, timezone
 
-process SUMMARIZE_VCF {
-    tag "summary:${params.vcf}"
-    publishDir params.publish_dir, mode: "copy", pattern: "*.json", overwrite: true
-    container "quay.io/biocontainers/jq:1.7--he0b1a49_1001"
+    vcf_path = pathlib.Path("${vcf_file}")
+    shutil.copy(vcf_path, pathlib.Path("normalized.vcf"))
 
-    input:
-    tuple path("normalized.vcf.gz"), path("normalized.vcf.gz.tbi"), path("normalized.vcf.stats")
+    total_records = 0
+    samples = []
 
-    output:
-    path "normalized.vcf.summary.json"
 
-    script:
-    """
-    cat <<'JSON' | jq '.' > normalized.vcf.summary.json
-    {
-      "source": "${params.vcf}",
-      "records": $(grep ^SN normalized.vcf.stats | awk '{s+=$4} END {print s+0}'),
-      "ts": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    with vcf_path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            if line.startswith("##"):
+                continue
+            if line.startswith("#CHROM"):
+                header_columns = line.rstrip().split("\t")
+                samples = header_columns[9:]
+                continue
+            if line.strip():
+                total_records += 1
+
+    summary = {
+        "source": str(vcf_path),
+        "records": total_records,
+        "samples": samples,
+        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
-    JSON
+
+    pathlib.Path("normalized.vcf.summary.json").write_text(
+        json.dumps(summary, indent=2), encoding="utf-8"
+    )
+    PY
     """
 }
 
-process VALIDATE_GFA {
+process SUMMARIZE_GFA {
     tag "gfa:${params.gfa}"
-    publishDir params.publish_dir, mode: "copy", overwrite: true
-    container "quay.io/biocontainers/odgi:0.8.5--h0033a41_1"
+    publishDir params.publish_dir, mode: "copy", overwrite: true, pattern: "gfa.*"
 
     input:
     path gfa_file
@@ -71,13 +77,47 @@ process VALIDATE_GFA {
 
     script:
     """
-    odgi stats -i ${gfa_file} -S > gfa.stats.json
+    python - <<'PY'
+    import json
+    import pathlib
+    from datetime import datetime, timezone
+
+    gfa_path = pathlib.Path("${gfa_file}")
+
+    segments = 0
+    links = 0
+    sequence_bases = 0
+
+    with gfa_path.open("r", encoding="utf-8") as handle:
+        for raw in handle:
+            line = raw.strip()
+            if not line:
+                continue
+            record_type = line[0]
+            if record_type == "S":
+                segments += 1
+                parts = line.split("\t")
+                if len(parts) > 2 and parts[2] not in {"*", ""}:
+                    sequence_bases += len(parts[2])
+            elif record_type in {"L", "E"}:
+                links += 1
+
+    stats = {
+        "source": str(gfa_path),
+        "segments": segments,
+        "links": links,
+        "sequence_bases": sequence_bases,
+        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
+
+    pathlib.Path("gfa.stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
+    PY
     """
 }
 
 process REGISTER_ASSETS {
     tag "register"
-    container "curlimages/curl:8.9.1"
+    publishDir params.publish_dir, mode: "copy", overwrite: true, pattern: "registration-response.json"
 
     input:
     tuple path(summary_json), path(gfa_stats)
@@ -87,27 +127,43 @@ process REGISTER_ASSETS {
 
     script:
     """
-    curl -sS -X POST \
-      -H "Content-Type: application/json" \
-      -d @${summary_json} \
-      ${params.backend_api}/api/v1/assets/vcf > registration-response.json || true
+    python - <<'PY'
+    import json
+    import pathlib
+    import urllib.error
+    import urllib.request
 
-    # Placeholder for future authenticated POST for GFA metadata
+    api = "${params.backend_api}".rstrip("/")
+    summary_path = pathlib.Path("${summary_json}")
+    gfa_path = pathlib.Path("${gfa_stats}")
+
+    payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    payload["gfa_stats"] = json.loads(gfa_path.read_text(encoding="utf-8"))
+
+    request = urllib.request.Request(
+        url=f"{api}/api/v1/assets/vcf",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            content = response.read().decode("utf-8")
+    except urllib.error.URLError as exc:
+        content = json.dumps({"error": str(exc)})
+
+    pathlib.Path("registration-response.json").write_text(content, encoding="utf-8")
+    PY
     """
 }
 
 workflow {
     Channel.fromPath(params.vcf).set { vcf_channel }
-    Channel.fromPath(params.reference).set { reference_channel }
     Channel.fromPath(params.gfa).set { gfa_channel }
 
-    vcf_with_ref = vcf_channel.combine(reference_channel)
-    normalized = NORMALIZE_VCF(vcf_with_ref)
-    summary = SUMMARIZE_VCF(normalized)
-    gfa_stats = VALIDATE_GFA(gfa_channel)
+    summaries = PREPARE_VCF(vcf_channel)
+    gfa_stats = SUMMARIZE_GFA(gfa_channel)
 
-    REGISTER_ASSETS(summary.combine(gfa_stats))
-
-    summary.view { "VCF summary emitted: ${it}" }
-    gfa_stats.view { "GFA stats emitted: ${it}" }
+    REGISTER_ASSETS(summaries.combine(gfa_stats))
 }

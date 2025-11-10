@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
 
 class PluginInput(BaseModel):
@@ -82,3 +82,20 @@ class PluginSummary(BaseModel):
     description: str
     tags: List[str]
     latest_run_at: Optional[datetime] = None
+
+
+class PluginTagSummary(BaseModel):
+    """Frequency information for a plugin tag."""
+
+    tag: str
+    usage_count: int
+
+
+class PluginStats(BaseModel):
+    """Aggregate statistics for the plugin registry."""
+
+    total_plugins: int
+    unique_authors: int
+    unique_tags: int
+    most_recent_update: Optional[datetime] = None
+    top_tags: List[PluginTagSummary] = Field(default_factory=list)

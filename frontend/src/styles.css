@@ -60,6 +60,10 @@ body {
   gap: 1.5rem;
 }
 
+.dashboard {
+  gap: 2rem;
+}
+
 .page-header {
   display: flex;
   align-items: center;
@@ -75,6 +79,32 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1.5rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+.stat-card {
+  background: radial-gradient(circle at top left, #e0f2fe, #bfdbfe);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #0f172a;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #1e293b;
 }
 
 .card {
@@ -118,6 +148,73 @@ body {
   color: #1e3a8a;
 }
 
+.tag-cloud {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tag-cloud li {
+  display: flex;
+  justify-content: space-between;
+  background: #eff6ff;
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.tag-cloud small {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.bullet-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filters input[type="search"] {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5f5;
+  font-size: 0.95rem;
+}
+
+.tag-filter {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tag-chip {
+  border: 1px solid #bfdbfe;
+  background: white;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #1e3a8a;
+}
+
+.tag-chip.active,
+.tag-chip:hover {
+  background-color: #1d4ed8;
+  color: white;
+  border-color: #1d4ed8;
+}
+
 .link-button {
   display: inline-flex;
   align-items: center;
@@ -139,6 +236,34 @@ body {
   color: #b91c1c;
 }
 
+.success {
+  color: #047857;
+  font-weight: 600;
+}
+
+.ingest-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ingest-list th,
+.ingest-list td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.ingest-list th {
+  font-weight: 600;
+  color: #1e293b;
+  background-color: #f8fafc;
+}
+
+.ingest-list tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .detail-card {
   background: white;
   border-radius: 1rem;
@@ -152,6 +277,14 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #475569;
 }
 
 .detail-card code {
@@ -184,6 +317,55 @@ body {
   color: #475569;
 }
 
+.plugin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.plugin-form textarea {
+  font-family: "Fira Code", monospace;
+  border-radius: 1rem;
+  border: 1px solid #cbd5f5;
+  padding: 1rem;
+  resize: vertical;
+}
+
+.plugin-form label {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.form-actions button {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.55rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-actions button[type="button"] {
+  background-color: white;
+  border-color: #cbd5f5;
+  color: #1e40af;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #1d4ed8;
+  color: white;
+}
+
+.form-actions button[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -198,5 +380,9 @@ body {
   .sidebar nav {
     flex-direction: row;
     gap: 1rem;
+  }
+
+  .filters {
+    align-items: stretch;
   }
 }
