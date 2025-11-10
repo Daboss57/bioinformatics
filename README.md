@@ -22,7 +22,7 @@ flowchart LR
     subgraph backend[Backend Services]
         fastapi[FastAPI Core API]
         plugins[Annotation Plugin Runtime]
-        rust[Graph Ops (Rust)]
+        rust["Graph Ops (Rust)"]
         db[(PostgreSQL)]
         es[(Elasticsearch)]
     end
